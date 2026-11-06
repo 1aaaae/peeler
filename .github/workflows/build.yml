@@ -21,24 +21,22 @@ jobs:
       - name: Install Android cmdline-tools
         run: |
           set -e
+          export ANDROID_HOME=/usr/local/lib/android/sdk
           mkdir -p $ANDROID_HOME/cmdline-tools
           curl -sSL -o /tmp/cmdline-tools.zip \
             https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
-          unzip -q /tmp/cmdline-tools.zip -d $ANDROID_HOME/cmdline-tools
-          mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest
-        env:
-          ANDROID_HOME: /usr/local/lib/android/sdk
+          unzip -q /tmp/cmdline-tools.zip -d /tmp/cmdline-tools-tmp
+          # 解压后的顶层目录名因版本而异，统一移到 latest
+          cp -r /tmp/cmdline-tools-tmp/*/ $ANDROID_HOME/cmdline-tools/latest
+          ls -la $ANDROID_HOME/cmdline-tools/latest/bin
 
       - name: Accept licenses and install SDK packages
         run: |
           set -e
-          yes | sdkmanager --licenses > /dev/null || true
-          sdkmanager \
-            "platforms;android-37" \
-            "build-tools;36.0.0" \
-            "platform-tools"
-        env:
-          ANDROID_HOME: /usr/local/lib/android/sdk
+          export ANDROID_HOME=/usr/local/lib/android/sdk
+          export SDKMANAGER=$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager
+          yes | $SDKMANAGER --licenses > /dev/null || true
+          $SDKMANAGER "platforms;android-37" "build-tools;36.0.0" "platform-tools"
 
       - name: Grant gradlew exec permission
         run: chmod +x Peeler-main/gradlew
